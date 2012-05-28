@@ -193,7 +193,8 @@ public class Autorank extends JavaPlugin {
 				+ info[1] + " after " + info[3]
 				+ " more minutes.");
 			}else{
-			    sender.sendMessage(prefix + "You will be ranked up next time you log on.");
+			    sender.sendMessage(prefix + "You will now be ranked up.");
+			    changer.CheckRank((Player)sender);
 			}
 			
 		    }

@@ -21,9 +21,13 @@ public class RankChanger implements Listener {
 	data = plugin.getData();
 	vault = plugin.getVault();
     }
-
+    
     @EventHandler(priority = EventPriority.MONITOR)
     public void OnPlayerJoin(PlayerJoinEvent e) {
+	CheckRank(e.getPlayer());
+    }
+
+    public void CheckRank(Player player) {
 	
 	if((Boolean)config.get("Enabled") == null){
 	    plugin.logMessage("Section 'Enabled' was not found in the config, please check that you are not using a pre-1.0 config");
@@ -35,7 +39,6 @@ public class RankChanger implements Listener {
 	    return;
 	}
 	
-	Player player = e.getPlayer();
 	String playerName = player.getName().toLowerCase();
 	String world = player.getWorld().getName();
 
@@ -70,11 +73,9 @@ public class RankChanger implements Listener {
 
 	Integer timePlayed = (Integer) data.get(playerName);
 	
-	if(plugin.getDebug()){
 	plugin.debugMessage("Time played: " + timePlayed);
 	plugin.debugMessage("Time needed: " + (Integer) config.get(entry
 		+ ".required minutes played"));
-	}
 	
 	if (timePlayed == null
 		|| timePlayed < (Integer) config.get(entry
