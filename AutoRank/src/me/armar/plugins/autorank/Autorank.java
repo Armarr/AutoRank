@@ -45,15 +45,13 @@ public class Autorank extends JavaPlugin {
 	    getPluginLoader().disablePlugin(this);
 	}
 
-	// make leaderboard
-	leaderboard = new Leaderboard();
-
 	// set up general config
 	this.configPath = this.getDataFolder().getAbsolutePath()
 		+ File.separator + "config.yml";
 	this.configDefaults.put("Enabled", false);
 	this.configDefaults.put("Debug mode", false);
 	this.configDefaults.put("Message prefix", "&2");
+	this.configDefaults.put("Leaderboard layout", "&n - &tm");
 	//this.configDefaults.put("Essentials AFK integration", false);
 	this.configDefaults.put("Update interval(minutes)", 5);
 	this.configDefaults.put("Leaderboard update interval(minutes)", 30);
@@ -91,6 +89,9 @@ public class Autorank extends JavaPlugin {
 		.get("Save interval(minutes)");
 	getServer().getScheduler().scheduleSyncRepeatingTask(this, save,
 		saveInterval + 22, saveInterval);
+	
+	// make leaderboard
+	leaderboard = new Leaderboard(this);
 
 	// schedule AutorankUpdateLeaderboard to be run
 	if (config.get("Leaderboard update interval(minutes)") == null) {
@@ -302,10 +303,6 @@ public class Autorank extends JavaPlugin {
 
     public Leaderboard getLeaderboard() {
 	return leaderboard;
-    }
-
-    public void clearLeaderboard() {
-	leaderboard = new Leaderboard();
     }
 
     public String[] getRankInfo(Player player) {

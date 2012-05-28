@@ -19,8 +19,6 @@ public class AutorankUpdateLeaderboard implements Runnable {
 	@Override
 	public void run() {
 	    try{
-		plugin.clearLeaderboard();
-		leaderboard = plugin.getLeaderboard();
 		Set<String> keys = data.getKeys();
 		Iterator<String> it = keys.iterator();
 		while (it.hasNext()) {
@@ -28,6 +26,7 @@ public class AutorankUpdateLeaderboard implements Runnable {
 			String key = (String) it.next();
 			leaderboard.addScore((Integer) data.get(key), key);
 		}
+		leaderboard.updateText();
 	    }catch (ConcurrentModificationException e){
 		run();
 	    }

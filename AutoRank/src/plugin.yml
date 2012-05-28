@@ -6,7 +6,7 @@ startup: postworld
 depend: [Vault]
 softdepend: [Essentials]
 url: http://wyverncreativeserver.enjin.com/
-version: '1.0'
+version: '1.2'
 commands:
     ar:
         description: Autorank
