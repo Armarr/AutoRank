@@ -8,7 +8,8 @@ import org.bukkit.command.CommandSender;
 
 public class Leaderboard {
 
-	private TreeMap<String, Integer> scores =  new TreeMap<String, Integer>();
+	private int[] scores = new int[10];
+	private String[] names = new String[10];
 	private Autorank plugin;
 	private Config config;
 	private String layout;
@@ -26,7 +27,27 @@ public class Leaderboard {
 	}
 
 	public void addScore(int score, String name) {
-		scores.put(name, score);
+		int number = 0;
+		boolean inTop10 = false;
+		boolean end = false;
+		for(int i = 9; i >= 0 && !end; i--)
+		{
+			if(score > scores[i])
+			{
+				inTop10 = true;
+				number = i;
+			}else{
+				end = true;
+			}
+		}
+		if (inTop10) {
+			for (int j = 9; number < j; j--) {
+				scores[j] = scores[j - 1];
+				names[j] = names[j - 1];
+			}
+			scores[number] = score;
+			names[number] = name;
+		}
 	}
 	
 
@@ -41,12 +62,11 @@ public class Leaderboard {
 	    text = "";
 	    
 	    text += ("---Leaderboard---" + "%split%");
-		Iterator<Entry<String, Integer>> it = scores.entrySet().iterator();
-		for(int i = 0; i<10 && it.hasNext(); i++){
-		    Entry<String, Integer> entry = it.next();
-		    String name = entry.getKey();
-		    int time = entry.getValue();
-		    
+		for (int i = 0; i < 10; i++) {
+			if (names[i] != null) {
+			    String name = names[i];
+			    int time = scores[i];
+			    
 		    String message = layout.replaceAll("&n", name);
 		    
 		    message = message.replaceAll("&p", Integer.toString(i+1));
@@ -62,7 +82,7 @@ public class Leaderboard {
 
 		   
 		    text += (message + "%split%");
-		}
+		}}
 		text += ("-----------------");
 	}
 
