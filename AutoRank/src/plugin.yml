@@ -1,0 +1,41 @@
+author: Armar
+database: false
+main: me.armar.plugins.autorank.Autorank
+name: AutoRank
+startup: postworld
+depend: [Vault]
+softdepend: [Essentials]
+url: http://wyverncreativeserver.enjin.com/
+version: '1.0'
+commands:
+    ar:
+        description: Autorank
+        usage: /ar action (playername)
+    autorank:
+        description: Autorank
+        usage: /autorank action (playername)
+permissions:
+    autorank.*:
+        description: Allows all commands.
+        default: op
+    autorank.check:
+        description: Allows checking the recommended rank.
+        default: op
+    autorank.checkothers:
+        description: Allows checking the recommended rank of other players.
+        default: op
+    autorank.leaderboard:
+        description: Allows looking at the leaderboards.
+        default: op
+    autorank.exclude:
+        description: Excludes groups or users from the autorank checks.
+        default: op
+    autorank.timeexclude:
+        description: Excludes groups or users from the playtime updates.
+        default: false
+    autorank.set:
+        description: Allows changing playtimes without stopping the server.
+        default: op
+    autorank.reload:
+        description: Allows reloading the config.
+        default: op
