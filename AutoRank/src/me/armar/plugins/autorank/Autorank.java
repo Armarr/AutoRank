@@ -134,6 +134,8 @@ public class Autorank extends JavaPlugin {
 	    prefix = (String) getConf().get("Message prefix");
 	}
 	
+	prefix = prefix.replaceAll("(&([a-f0-9]))", "\u00A7$2");
+	
 	String noPerm = "&cYou do not have permission to use this command.";
 	boolean overridePerms = sender.hasPermission("autorank.*");
 

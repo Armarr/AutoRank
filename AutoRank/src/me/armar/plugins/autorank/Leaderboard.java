@@ -79,7 +79,8 @@ public class Leaderboard {
 		    message = message.replaceAll("&h", Integer.toString(time/60));
 		    time = time - ((time/60)*60);
 		    message = message.replaceAll("&m", Integer.toString(time));
-
+		    
+		    message = message.replaceAll("(&([a-f0-9]))", "\u00A7$2");
 		   
 		    text += (message + "%split%");
 		}}
