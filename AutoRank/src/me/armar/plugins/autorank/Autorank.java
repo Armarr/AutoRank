@@ -53,6 +53,7 @@ public class Autorank extends JavaPlugin {
 		+ File.separator + "config.yml";
 	this.configDefaults.put("Enabled", false);
 	this.configDefaults.put("Debug mode", false);
+	this.configDefaults.put("Message prefix", "&2");
 	//this.configDefaults.put("Essentials AFK integration", false);
 	this.configDefaults.put("Update interval(minutes)", 5);
 	this.configDefaults.put("Leaderboard update interval(minutes)", 30);
@@ -127,7 +128,12 @@ public class Autorank extends JavaPlugin {
 
     public boolean onCommand(CommandSender sender, Command cmd, String label,
 	    String[] args) {
-	String noPerm = "You do not have permission to use this command.";
+	String prefix = "&2";
+	if(getConf().get("Message prefix") != null){
+	    prefix = (String) getConf().get("Message prefix");
+	}
+	
+	String noPerm = "&cYou do not have permission to use this command.";
 	boolean overridePerms = sender.hasPermission("autorank.*");
 
 	// onCommand returns true if the command was handled by the plugin
@@ -140,11 +146,11 @@ public class Autorank extends JavaPlugin {
 		getData().save();
 		logMessage("Data saved");
 		getConf().load();
-		sender.sendMessage("Autorank config reloaded");
+		sender.sendMessage(prefix + "Autorank config reloaded");
 		return true;
 	    }
 	    if (args[0].equalsIgnoreCase("help")) {
-		sender.sendMessage("Actions: check, check [name], leaderboard, set [name] [value], reload");
+		sender.sendMessage(prefix + "Actions: check, check [name], leaderboard, set [name] [value], reload");
 	    }
 	    if (args[0].equalsIgnoreCase("leaderboard")) {
 		// check permissions
@@ -153,7 +159,7 @@ public class Autorank extends JavaPlugin {
 		    sender.sendMessage(noPerm);
 		    return true;
 		}
-		leaderboard.display(sender);
+		leaderboard.display(sender, prefix);
 		return true;
 	    }
 	    if (args[0].equalsIgnoreCase("check")) {
@@ -168,14 +174,14 @@ public class Autorank extends JavaPlugin {
 		Integer time = (Integer) data.get(sender.getName()
 			.toLowerCase());
 		if (time == null) {
-		    sender.sendMessage("No time registered yet, try again later.");
+		    sender.sendMessage(prefix + "No time registered yet, try again later.");
 		} else {
 		    String[] info = getRankInfo((Player) sender);
 		    // 0 - current rank
 		    // 1 - next rank
 		    // 2 - in world
 		    // 3 - time to next rank
-		    sender.sendMessage("You are a " + info[0]
+		    sender.sendMessage(prefix + "You are a " + info[0]
 			    + " and have played for " + time / 60
 			    + " hours and " + time % 60 + " minutes.");
 		  
@@ -183,16 +189,16 @@ public class Autorank extends JavaPlugin {
 			int reqMins = Integer.parseInt(info[3]);
 			
 			if(reqMins>0){
-			sender.sendMessage("You will be ranked up to "
+			sender.sendMessage(prefix + "You will be ranked up to "
 				+ info[1] + " after " + info[3]
 				+ " more minutes.");
 			}else{
-			    sender.sendMessage("You will be ranked up next time you log on.");
+			    sender.sendMessage(prefix + "You will be ranked up next time you log on.");
 			}
 			
 		    }
 		    if (info[2] != null) {
-			sender.sendMessage("This is specific to the world you are currently in.");
+			sender.sendMessage(prefix + "This is specific to the world you are currently in. ("+info[2]+")");
 		    }
 		}
 		return true;
@@ -213,9 +219,9 @@ public class Autorank extends JavaPlugin {
 
 		Integer time = (Integer) data.get(playerName);
 		if (time == null) {
-		    sender.sendMessage("No time registered yet, try again later.");
+		    sender.sendMessage(prefix + "No time registered yet, try again later.");
 		} else {
-		    sender.sendMessage(playerName + " has played for " + time
+		    sender.sendMessage(prefix + playerName + " has played for " + time
 			    / 60 + " hours and " + time % 60 + " minutes.");
 
 		    if (player != null) {
@@ -224,16 +230,19 @@ public class Autorank extends JavaPlugin {
 			// 1 - next rank
 			// 2 - in world
 			// 3 - time to next rank
-			sender.sendMessage(playerName + " is a " + info[0]
+			sender.sendMessage(prefix + playerName + " is a " + info[0]
 				+ " and has played for " + time / 60
 				+ " hours and " + time % 60 + " minutes.");
 			if (info[1] != null && info[3] != null) {
-			    sender.sendMessage("You will be ranked up to "
+			    sender.sendMessage(prefix + "He/she will be ranked up to "
 				    + info[1] + " after " + info[3]
 				    + " more minutes.");
 			}
+			    if (info[2] != null) {
+				sender.sendMessage(prefix + "This is specific to the world he/she is currently in. ("+info[2]+")");
+			    }
 		    }else{
-			sender.sendMessage("This player is offline, cannot check future rank");
+			sender.sendMessage(prefix + "This player is offline, cannot check future rank");
 		    }
 		}
 		return true;
@@ -249,11 +258,11 @@ public class Autorank extends JavaPlugin {
 		try {
 		    int value = Integer.parseInt(args[2]);
 		    data.set(playerName, (Integer) value);
-		    sender.sendMessage(playerName
+		    sender.sendMessage(prefix + playerName
 			    + "'s playtime has been set to " + value);
 		    return true;
 		} catch (Exception e) {
-		    sender.sendMessage("Cannot set to that.");
+		    sender.sendMessage(prefix + "Cannot set to that.");
 		    return true;
 		}
 	    }

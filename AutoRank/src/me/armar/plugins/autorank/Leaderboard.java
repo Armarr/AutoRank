@@ -34,14 +34,16 @@ public class Leaderboard {
 		}
 	}
 
-	public void display(CommandSender sender) {
+	public void display(CommandSender sender, String prefix) {
+	    sender.sendMessage(prefix + "---Leaderboard---");
 		for (int i = 0; i < 10; i++) {
 			if (names[i] != null) {
 				String message = names[i];
 				message += " - " + Integer.toString(scores[i]);
-				sender.sendMessage(message);
+				sender.sendMessage(prefix + message);
 			}
 		}
+	    sender.sendMessage(prefix + "----------------");
 	}
 
 }
