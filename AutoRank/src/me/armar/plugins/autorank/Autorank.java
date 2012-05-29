@@ -52,7 +52,7 @@ public class Autorank extends JavaPlugin {
 	this.configDefaults.put("Debug mode", false);
 	this.configDefaults.put("Message prefix", "&2");
 	this.configDefaults.put("Leaderboard layout", "&n - &tm");
-	//this.configDefaults.put("Essentials AFK integration", false);
+	this.configDefaults.put("Essentials AFK integration", false);
 	this.configDefaults.put("Update interval(minutes)", 5);
 	this.configDefaults.put("Leaderboard update interval(minutes)", 30);
 	this.configDefaults.put("Save interval(minutes)", 60);

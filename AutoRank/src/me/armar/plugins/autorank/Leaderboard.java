@@ -1,9 +1,5 @@
 package me.armar.plugins.autorank;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
 import org.bukkit.command.CommandSender;
 
 public class Leaderboard {

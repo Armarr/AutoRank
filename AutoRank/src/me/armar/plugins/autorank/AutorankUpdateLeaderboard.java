@@ -6,12 +6,10 @@ import java.util.Set;
 
 public class AutorankUpdateLeaderboard implements Runnable {
 
-	private Autorank plugin;
 	private Config data;
 	private Leaderboard leaderboard;
 
 	public AutorankUpdateLeaderboard(Autorank plugin) {
-		this.plugin = plugin;
 		data = plugin.getData();
 		leaderboard = plugin.getLeaderboard();
 	}

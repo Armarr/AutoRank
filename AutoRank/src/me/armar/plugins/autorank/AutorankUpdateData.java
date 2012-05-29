@@ -20,7 +20,7 @@ public class AutorankUpdateData extends TimerTask {
 	this.plugin = plugin;
 	this.data = this.plugin.getData();
 	this.config = this.plugin.getConf();
-	/*
+	
 	if (config.get("Essentials AFK integration") != null && (Boolean) config.get("Essentials AFK integration") == true)
 	    afkCheck = true;
 
@@ -33,7 +33,7 @@ public class AutorankUpdateData extends TimerTask {
 		plugin.logMessage("Essentials was NOT found! Disabling AFK integration.");
 		afkCheck = false;
 	    }
-	}*/
+	}
     }
 
     @Override
@@ -51,12 +51,12 @@ public class AutorankUpdateData extends TimerTask {
 		if (!data.exists(playerName)) {
 		    data.set(playerName, 0);
 		}
-		//if (!afkCheck || !ess.getUser(playerName).isAfk()) {
+		if (!(afkCheck && ess.getUser(playerName).isAfk())) {
 		    if (!onlinePlayers[i].hasPermission("autorank.timeexclude")) {
 			data.set(playerName,
 				((Integer) data.get(playerName) + interval));
 		    }
-		//}
+		}
 	    }
 	}
     }
