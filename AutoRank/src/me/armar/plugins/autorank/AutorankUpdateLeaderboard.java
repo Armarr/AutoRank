@@ -17,10 +17,10 @@ public class AutorankUpdateLeaderboard implements Runnable {
 	@Override
 	public void run() {
 	    try{
+		leaderboard.clear();
 		Set<String> keys = data.getKeys();
 		Iterator<String> it = keys.iterator();
 		while (it.hasNext()) {
-			// Get element
 			String key = (String) it.next();
 			leaderboard.addScore((Integer) data.get(key), key);
 		}

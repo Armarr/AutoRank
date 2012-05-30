@@ -83,4 +83,9 @@ public class Leaderboard {
 		text += ("-----------------");
 	}
 
+	public void clear() {
+		scores = new int[10];
+		names = new String[10];
+	}
+
 }
