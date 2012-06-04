@@ -319,6 +319,7 @@ public class Autorank extends JavaPlugin {
 	String world = player.getWorld().getName();
 
 	String currentRank = vault.getRank(player, world);
+	if(currentRank == null){currentRank = "Default";}
 	res[0] = currentRank;
 
 	int entry = 1;

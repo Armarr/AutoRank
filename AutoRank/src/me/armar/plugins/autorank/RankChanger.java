@@ -29,6 +29,12 @@ public class RankChanger implements Listener {
 
     public void CheckRank(Player player) {
 	
+	String playerName = player.getName().toLowerCase();
+	
+	if (!data.exists(playerName)) {
+	    data.set(playerName, 0);
+	}
+	
 	if((Boolean)config.get("Enabled") == null){
 	    plugin.logMessage("Section 'Enabled' was not found in the config, please check that you are not using a pre-1.0 config");
 	    return;
@@ -39,10 +45,10 @@ public class RankChanger implements Listener {
 	    return;
 	}
 	
-	String playerName = player.getName().toLowerCase();
 	String world = player.getWorld().getName();
 
 	String currentRank = vault.getRank(player, world);
+	if(currentRank == null){currentRank = "Default";}
 
 	plugin.debugMessage("Player " + playerName + " logged on in world "
 		+ world + " and has rank " + currentRank);
@@ -51,16 +57,16 @@ public class RankChanger implements Listener {
 	boolean found = false;
 	while (config.get(entry + ".from") != null && !found) {
 	    
-	if(plugin.getDebug()){
-	plugin.debugMessage("Testing entry " + entry);
-	plugin.debugMessage("From: " + (String) config.get(entry + ".from"));
-	plugin.debugMessage("To: " + (String) config.get(entry + ".to"));
-	plugin.debugMessage("World: " + (String) config.get(entry + ".world"));
-	}
+		if(plugin.getDebug()){
+			plugin.debugMessage("Testing entry " + entry);
+			plugin.debugMessage("From: " + (String) config.get(entry + ".from"));
+			plugin.debugMessage("To: " + (String) config.get(entry + ".to"));
+			plugin.debugMessage("World: " + (String) config.get(entry + ".world"));
+			}
 	
-	    if (currentRank.equals((String) config.get(entry + ".from"))
+	    if (currentRank.equalsIgnoreCase((String) config.get(entry + ".from"))
 		    && (config.get(entry + ".world") == null)
-		    || world.equals((String) config.get(entry + ".world"))) {
+		    || world.equalsIgnoreCase((String) config.get(entry + ".world"))) {
 		found = true;
 		plugin.debugMessage("Confirmed entry " + entry);
 	    }else{
