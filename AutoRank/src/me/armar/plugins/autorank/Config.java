@@ -50,10 +50,10 @@ public class Config {
 	public void save() {
 		try {
 			this.config.save(file);
-		} catch (IOException e) {
-			e.printStackTrace();
 		} catch (ConcurrentModificationException e){
 			save();
+		} catch (IOException e) {
+			e.printStackTrace();
 		    }
 
 	}

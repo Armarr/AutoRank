@@ -9,7 +9,7 @@ public class Leaderboard {
 	private Autorank plugin;
 	private Config config;
 	private String layout;
-	private String text;
+	private String[] messages;
 
 	public Leaderboard(Autorank plugin) {
 	    this.plugin = plugin;
@@ -48,14 +48,13 @@ public class Leaderboard {
 	
 
 	public void display(CommandSender sender, String prefix) {
-	    String[] messages = text.split("%split%");
 	    for(String msg:messages){
 		sender.sendMessage(prefix + msg);
 	    }
 	}
 	
 	public void updateText(){
-	    text = "";
+	    String text = "";
 	    
 	    text += ("---Leaderboard---" + "%split%");
 		for (int i = 0; i < 10; i++) {
@@ -81,6 +80,8 @@ public class Leaderboard {
 		    text += (message + "%split%");
 		}}
 		text += ("-----------------");
+		
+		messages = text.split("%split%");
 	}
 
 	public void clear() {

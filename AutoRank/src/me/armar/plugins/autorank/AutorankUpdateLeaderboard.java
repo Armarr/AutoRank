@@ -6,7 +6,7 @@ import java.util.Set;
 
 public class AutorankUpdateLeaderboard implements Runnable {
 
-	private Config data;
+	private DataStorage data;
 	private Leaderboard leaderboard;
 
 	public AutorankUpdateLeaderboard(Autorank plugin) {

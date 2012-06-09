@@ -7,7 +7,7 @@ import net.milkbowl.vault.permission.Permission;
 
 public class VaultHandler {
 
-	public static Permission permission = null;
+	private static Permission permission = null;
 	private Autorank plugin;
 
 	public VaultHandler(Autorank plugin) {
@@ -26,15 +26,23 @@ public class VaultHandler {
 		return (permission != null);
 	}
 
-	public String getRank(Player player, String world) {
+	public String getPrimaryGroup(Player player, String world) {
 		if (world == null){
 		return permission.getPrimaryGroup(player);
 		}else{
 		return permission.getPrimaryGroup(world, player.getName());
 		}
 	}
+	
+	public String[] getGroups(Player player, String world) {
+		if (world == null){
+		return permission.getPlayerGroups(player);
+		}else{
+		return permission.getPlayerGroups(world, player.getName());
+		}
+	}
 
-	public void setRank(String player, String oldRank, String rank, String world) {
+	public void replaceGroup(String player, String oldRank, String rank, String world) {
 		plugin.debugMessage("Old rank: " + oldRank);
 		plugin.debugMessage("New rank: " + rank);
 		
@@ -46,5 +54,9 @@ public class VaultHandler {
 		}
 		
 		permission.playerAddGroup(world, player, rank);
+	}
+
+	public String[] getGroups() {
+	    return permission.getGroups();
 	}
 }

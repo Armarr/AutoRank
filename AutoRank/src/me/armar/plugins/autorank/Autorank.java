@@ -1,7 +1,6 @@
 package me.armar.plugins.autorank;
 
 import net.milkbowl.vault.Vault;
-import net.milkbowl.vault.permission.Permission;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -20,13 +19,9 @@ import java.util.logging.Logger;
 public class Autorank extends JavaPlugin {
 
     private Logger log = Logger.getLogger("Minecraft");
-    private String configPath;
-    private String dataPath;
     private Config config;
-    private Config data;
-    private LinkedHashMap<String, Object> configDefaults = new LinkedHashMap<String, Object>();
+    private DataStorage data;
     private VaultHandler vault;
-    public static Permission permission = null;
     private AutorankSaveData save;
     private Leaderboard leaderboard;
     private AutorankUpdateLeaderboard leaderboardUpdate;
@@ -46,50 +41,44 @@ public class Autorank extends JavaPlugin {
 	}
 
 	// set up general config
-	this.configPath = this.getDataFolder().getAbsolutePath()
-		+ File.separator + "config.yml";
-	this.configDefaults.put("Enabled", false);
-	this.configDefaults.put("Debug mode", false);
-	this.configDefaults.put("Message prefix", "&2");
-	this.configDefaults.put("Leaderboard layout", "&n - &tm");
-	this.configDefaults.put("Essentials AFK integration", false);
-	this.configDefaults.put("Update interval(minutes)", 5);
-	this.configDefaults.put("Leaderboard update interval(minutes)", 30);
-	this.configDefaults.put("Save interval(minutes)", 60);
-	this.configDefaults.put("1.from", "Newcomer");
-	this.configDefaults.put("1.to", "Member");
-	this.configDefaults.put("1.required minutes played", 1800);
-	this.configDefaults.put("1.message",
-		"&2Congratulations, you are now a Member.");
-	this.configDefaults.put("1.commands",
-		"say &p just got ranked up to Member !;eco give &p 50");
-	this.configDefaults.put("1.world", null);
-	this.configDefaults.put("2.from", "Member");
-	this.configDefaults.put("2.to", "Veteran");
-	this.configDefaults.put("2.required minutes played", 12000);
-	this.configDefaults.put("2.message",
-		"&2Congratulations, you are now a Veteran.");
-	this.configDefaults.put("2.world", null);
+	LinkedHashMap<String, Object> configDefaults = new LinkedHashMap<String, Object>();
+	String configPath = this.getDataFolder().getAbsolutePath() + File.separator + "config.yml";
+	configDefaults.put("Enabled", false);
+	configDefaults.put("Debug mode", false);
+	configDefaults.put("Message prefix", "&2");
+	configDefaults.put("Leaderboard layout", "&n - &tm");
+	configDefaults.put("Essentials AFK integration", false);
+	configDefaults.put("Update interval(minutes)", 5);
+	configDefaults.put("Leaderboard update interval(minutes)", 30);
+	configDefaults.put("Save interval(minutes)", 60);
+	
+	String[] availableGroups = vault.getGroups();
+	for(int i = 0; i < availableGroups.length-1; i++){
+	    String from = availableGroups[i];
+	    String to = availableGroups[i+1];
+	    
+		configDefaults.put((i+1) + ".from", from);
+		configDefaults.put((i+1) + ".to", to);
+		configDefaults.put((i+1) + ".required minutes played", ((i+1)*200));
+		configDefaults.put((i+1) + ".message", "&2Congratulations, you are now a " + to +".");
+		configDefaults.put((i+1) + ".world", null);
+		configDefaults.put((i+1) + ".commands", null);
+	}
 	config = new Config(this, configPath, configDefaults, "config");
 
 	// set up player data
-	this.dataPath = this.getDataFolder().getAbsolutePath() + File.separator
-		+ "data.yml";
-	data = new Config(this, dataPath, null, "data");
+	data = new DataStorage(this);
 
 	// schedule AutorankUpdate to be run
 	int updateInterval = (Integer) config.get("Update interval(minutes)");
 	timer = new Timer();
-	timer.scheduleAtFixedRate(new AutorankUpdateData(this),
-		updateInterval * 1000 * 60, updateInterval * 1000 * 60);
+	timer.scheduleAtFixedRate(new AutorankUpdateData(this), updateInterval * 1000 * 60, updateInterval * 1000 * 60);
 
 	// schedule AutorankSave to be run
 	save = new AutorankSaveData(this);
-	int saveInterval = 60 * 20 * (Integer) config
-		.get("Save interval(minutes)");
-	getServer().getScheduler().scheduleSyncRepeatingTask(this, save,
-		saveInterval + 22, saveInterval);
-	
+	int saveInterval = 60 * 20 * (Integer) config.get("Save interval(minutes)");
+	getServer().getScheduler().scheduleSyncRepeatingTask(this, save, saveInterval + 22, saveInterval);
+
 	// make leaderboard
 	leaderboard = new Leaderboard(this);
 
@@ -101,10 +90,8 @@ public class Autorank extends JavaPlugin {
 	}
 
 	leaderboardUpdate = new AutorankUpdateLeaderboard(this);
-	int leaderboardUpdateInterval = 60 * 20 * (Integer) config
-		.get("Leaderboard update interval(minutes)");
-	getServer().getScheduler().scheduleSyncRepeatingTask(this,
-		leaderboardUpdate, 33, leaderboardUpdateInterval);
+	int leaderboardUpdateInterval = 60 * 20 * (Integer) config.get("Leaderboard update interval(minutes)");
+	getServer().getScheduler().scheduleSyncRepeatingTask(this, leaderboardUpdate, 33, leaderboardUpdateInterval);
 
 	if (config.get("Debug mode") != null) {
 	    debug = (Boolean) config.get("Debug mode");
@@ -114,6 +101,11 @@ public class Autorank extends JavaPlugin {
 	Bukkit.getPluginManager().registerEvents(changer, this);
 
 	logMessage("Enabled.");
+
+	if (!(Boolean) config.get("Enabled")) {
+	    logMessage("Rank changing disabled. Please set 'enabled' to true if after you set up the ranks.");
+	}
+
 	debugMessage("Debug mode ON");
 
     }
@@ -127,20 +119,17 @@ public class Autorank extends JavaPlugin {
 	timer.cancel();
     }
 
-    public boolean onCommand(CommandSender sender, Command cmd, String label,
-	    String[] args) {
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 	String prefix = "&2";
-	if(getConf().get("Message prefix") != null){
+	if (getConf().get("Message prefix") != null) {
 	    prefix = (String) getConf().get("Message prefix");
 	}
-	
+
 	prefix = prefix.replaceAll("(&([a-f0-9]))", "\u00A7$2");
-	
+
 	String noPerm = "&cYou do not have permission to use this command.";
 	boolean overridePerms = sender.hasPermission("autorank.*");
 
-	// onCommand returns true if the command was handled by the plugin
-	if (args.length == 1) {
 	    if (args[0].equalsIgnoreCase("reload")) {
 		if (!sender.hasPermission("autorank.reload") && !overridePerms) {
 		    sender.sendMessage(noPerm);
@@ -152,19 +141,22 @@ public class Autorank extends JavaPlugin {
 		sender.sendMessage(prefix + "Autorank config reloaded");
 		return true;
 	    }
+	    else
 	    if (args[0].equalsIgnoreCase("help")) {
 		sender.sendMessage(prefix + "Actions: check, check [name], leaderboard, set [name] [value], reload");
+		return false;
 	    }
+	    else
 	    if (args[0].equalsIgnoreCase("leaderboard")) {
 		// check permissions
-		if (!sender.hasPermission("autorank.leaderboard")
-			&& !overridePerms) {
+		if (!sender.hasPermission("autorank.leaderboard") && !overridePerms) {
 		    sender.sendMessage(noPerm);
 		    return true;
 		}
 		leaderboard.display(sender, prefix);
 		return true;
 	    }
+	    else
 	    if (args[0].equalsIgnoreCase("check")) {
 		if (!sender.hasPermission("autorank.check") && !overridePerms) {
 		    sender.sendMessage(noPerm);
@@ -174,49 +166,50 @@ public class Autorank extends JavaPlugin {
 		    sender.sendMessage("Cannot check for console.");
 		    return true;
 		}
-		Integer time = (Integer) data.get(sender.getName()
-			.toLowerCase());
+		Integer time = (Integer) data.get(sender.getName().toLowerCase());
 		if (time == null) {
-		    sender.sendMessage(prefix + "No time registered yet, try again later.");
+		    sender.sendMessage(prefix + "No time registered. Something must have gone wrong on startup, please check the console.");
 		} else {
 		    String[] info = getRankInfo((Player) sender);
 		    // 0 - current rank
 		    // 1 - next rank
 		    // 2 - in world
 		    // 3 - time to next rank
-		    sender.sendMessage(prefix + "You are a " + info[0]
-			    + " and have played for " + time / 60
-			    + " hours and " + time % 60 + " minutes.");
-		  
+		    sender.sendMessage(prefix + "You are a " + info[0] + " and have played for " + time / 60 + " hours and " + time % 60
+			    + " minutes.");
+
 		    if (info[1] != null && info[3] != null) {
-			int reqMins = Integer.parseInt(info[3]);
-			
-			if(reqMins>0){
-			sender.sendMessage(prefix + "You will be ranked up to "
-				+ info[1] + " after " + info[3]
-				+ " more minutes.");
-			}else{
-			    sender.sendMessage(prefix + "You will now be ranked up.");
-			    changer.CheckRank((Player)sender);
+			if ((Boolean) config.get("Enabled") == false) {
+			    sender.sendMessage(prefix + "Automatic rank changes are disabled");
+			    return true;
 			}
-			
+			int reqMins = Integer.parseInt(info[3]);
+
+			if (reqMins > 0) {
+			    sender.sendMessage(prefix + "You will be ranked up to " + info[1] + " after " + info[3] + " more minutes.");
+			} else {
+			    sender.sendMessage(prefix + "You will now be ranked up.");
+			    changer.CheckRank((Player) sender);
+			}
+
 		    }
 		    if (info[2] != null) {
-			sender.sendMessage(prefix + "This is specific to the world you are currently in. ("+info[2]+")");
+			sender.sendMessage(prefix + "This is specific to the world you are currently in. (" + info[2] + ")");
 		    }
 		}
 		return true;
 	    }
-	}
-	if (args.length > 1) {
+	
+	    else
+	    if(args.length<2){return false;}
+	    
 	    // set variables
 	    String playerName = args[1].toLowerCase();
 	    Player player = Bukkit.getPlayer(playerName);
 	    // handle CHECK OTHERS command
 	    if (args[0].equalsIgnoreCase("check")) {
 		// check permissions
-		if (!sender.hasPermission("autorank.checkothers")
-			&& !overridePerms) {
+		if (!sender.hasPermission("autorank.checkothers") && !overridePerms) {
 		    sender.sendMessage(noPerm);
 		    return true;
 		}
@@ -225,8 +218,7 @@ public class Autorank extends JavaPlugin {
 		if (time == null) {
 		    sender.sendMessage(prefix + "No time registered yet, try again later.");
 		} else {
-		    sender.sendMessage(prefix + playerName + " has played for " + time
-			    / 60 + " hours and " + time % 60 + " minutes.");
+		    sender.sendMessage(prefix + playerName + " has played for " + time / 60 + " hours and " + time % 60 + " minutes.");
 
 		    if (player != null) {
 			String[] info = getRankInfo(player);
@@ -234,18 +226,15 @@ public class Autorank extends JavaPlugin {
 			// 1 - next rank
 			// 2 - in world
 			// 3 - time to next rank
-			sender.sendMessage(prefix + playerName + " is a " + info[0]
-				+ " and has played for " + time / 60
-				+ " hours and " + time % 60 + " minutes.");
+			sender.sendMessage(prefix + playerName + " is a " + info[0] + " and has played for " + time / 60 + " hours and "
+				+ time % 60 + " minutes.");
 			if (info[1] != null && info[3] != null) {
-			    sender.sendMessage(prefix + "He/she will be ranked up to "
-				    + info[1] + " after " + info[3]
-				    + " more minutes.");
+			    sender.sendMessage(prefix + "He/she will be ranked up to " + info[1] + " after " + info[3] + " more minutes.");
 			}
-			    if (info[2] != null) {
-				sender.sendMessage(prefix + "This is specific to the world he/she is currently in. ("+info[2]+")");
-			    }
-		    }else{
+			if (info[2] != null) {
+			    sender.sendMessage(prefix + "This is specific to the world he/she is currently in. (" + info[2] + ")");
+			}
+		    } else {
 			sender.sendMessage(prefix + "This player is offline, cannot check future rank");
 		    }
 		}
@@ -253,6 +242,7 @@ public class Autorank extends JavaPlugin {
 		// handle CHANGE command
 	    }
 	    // handle SET command
+	    else
 	    if (args[0].equalsIgnoreCase("set")) {
 		// check permissions
 		if (!sender.hasPermission("autorank.set") && !overridePerms) {
@@ -262,22 +252,20 @@ public class Autorank extends JavaPlugin {
 		try {
 		    int value = Integer.parseInt(args[2]);
 		    data.set(playerName, (Integer) value);
-		    sender.sendMessage(prefix + playerName
-			    + "'s playtime has been set to " + value);
+		    sender.sendMessage(prefix + playerName + "'s playtime has been set to " + value);
 		    return true;
 		} catch (Exception e) {
 		    sender.sendMessage(prefix + "Cannot set to that.");
 		    return true;
 		}
 	    }
-	}
+	    
 	return false;
     }
 
     public void logMessage(String msg) {
 	PluginDescriptionFile pdFile = this.getDescription();
-	this.log.info(pdFile.getName() + " " + pdFile.getVersion() + " : "
-		+ msg);
+	this.log.info(pdFile.getName() + " " + pdFile.getVersion() + " : " + msg);
     }
 
     public void debugMessage(String msg) {
@@ -285,8 +273,8 @@ public class Autorank extends JavaPlugin {
 	    this.log.info("Autorank debug: " + msg);
 	}
     }
-    
-    public boolean getDebug(){
+
+    public boolean getDebug() {
 	return debug;
     }
 
@@ -295,7 +283,7 @@ public class Autorank extends JavaPlugin {
 	return config;
     }
 
-    public Config getData() {
+    public DataStorage getData() {
 	return data;
     }
 
@@ -318,21 +306,35 @@ public class Autorank extends JavaPlugin {
 	String playerName = player.getName().toLowerCase();
 	String world = player.getWorld().getName();
 
-	String currentRank = vault.getRank(player, world);
-	if(currentRank == null){currentRank = "Default";}
-	res[0] = currentRank;
+	String[] Playergroups = vault.getGroups(player, world);
+	if (Playergroups == null) {
+	    Playergroups = new String[] { "Default" };
+	}
+	
+	res[0] = "";
+	for(String group : Playergroups){
+	    if(!res[0].equals("")) res[0] += ", ";
+	    res[0] += group;
+	}
 
-	int entry = 1;
+
 	boolean found = false;
-	while (config.get(entry + ".from") != null && !found) {
+	int entry = 1; 
+	
+	for (int i = 0; !found && i < Playergroups.length; i++) {
 
-	    if (currentRank.equals((String) config.get(entry + ".from"))
-		    && (config.get(entry + ".world") == null)
-		    || world.equals((String) config.get(entry + ".world"))) {
-		found = true;
-	    } else {
-		entry++;
+	    entry = 1;
+	    found = false;
+	    while (config.get(entry + ".from") != null && !found) {
+
+		if (Playergroups[i].equals((String) config.get(entry + ".from")) && (config.get(entry + ".world") == null)
+			|| world.equals((String) config.get(entry + ".world"))) {
+		    found = true;
+		} else {
+		    entry++;
+		}
 	    }
+
 	}
 
 	if (found == true) {
@@ -342,10 +344,8 @@ public class Autorank extends JavaPlugin {
 
 	Integer timePlayed = (Integer) data.get(playerName);
 
-	if (timePlayed != null
-		&& config.get(entry + ".required minutes played") != null)
-	    res[3] = ((Integer) ((Integer) config.get(entry
-		    + ".required minutes played") - timePlayed)).toString();
+	if (timePlayed != null && config.get(entry + ".required minutes played") != null)
+	    res[3] = ((Integer) ((Integer) config.get(entry + ".required minutes played") - timePlayed)).toString();
 	;
 
 	return res;
