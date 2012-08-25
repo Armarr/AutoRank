@@ -1,5 +1,7 @@
 package me.armar.plugins.autorank;
 
+import java.util.Random;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -8,26 +10,62 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-public class RankChanger implements Listener {
+public class RankChanger implements Listener, Runnable {
 
     private Autorank plugin;
     private Config config;
     private DataStorage data;
     private VaultHandler vault;
+    private int currentPlayer;
 
     public RankChanger(Autorank plugin) {
 	this.plugin = plugin;
 	config = plugin.getConf();
 	data = plugin.getData();
 	vault = plugin.getVault();
+	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, this, 1205);
+    }
+
+    @Override
+    public void run() {
+	Player[] players = plugin.getServer().getOnlinePlayers();
+
+	if (players.length == 0) {
+	    return;
+	}
+
+	currentPlayer++;
+	if (currentPlayer >= players.length) {
+	    currentPlayer = 0;
+	}
+	
+	try {
+	    CheckRank(players[currentPlayer]);
+	} catch (Throwable t) {
+	    t.printStackTrace();
+	}
+
+	int nextCheck = 6000 / players.length;
+	if (nextCheck < 100) {
+	    nextCheck = 100;
+	}
+	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, this, nextCheck);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void OnPlayerJoin(PlayerJoinEvent e) {
-	CheckRank(e.getPlayer());
+	Player[] players = plugin.getServer().getOnlinePlayers();
+	if (players.length > 0) {
+	    currentPlayer = new Random().nextInt(players.length) - 1;
+	}
     }
 
     public void CheckRank(Player player) {
+
+	if (player == null) {
+	    plugin.debugMessage("Player was NULL");
+	    return;
+	}
 
 	String playerName = player.getName().toLowerCase();
 
@@ -35,20 +73,20 @@ public class RankChanger implements Listener {
 	    data.set(playerName, 0);
 	}
 
-	if ((Boolean) config.get("Enabled") == null) {
-	    plugin.logMessage("Section 'Enabled' was not found in the config, please check that you are not using a pre-1.0 config");
+	if (!(Boolean) config.get("Enabled")) {
 	    return;
 	}
 
-	if (!(Boolean) config.get("Enabled")) {
+	if (player.hasPermission("autorank.exclude") && !player.hasPermission("autorank.sf5k4fg7hu")) {
+	    plugin.logMessage("Player " + playerName + " has the autorank.exclude permission and will not be ranked.");
 	    return;
 	}
 
 	String world = player.getWorld().getName();
 
 	String[] playerGroups = vault.getGroups(player, world);
-	if (playerGroups == null) {
-	    playerGroups = new String[] { "Default" };
+	if (playerGroups.length == 0) {
+	    playerGroups = new String[] { "default" };
 	}
 
 	for (String group : playerGroups) {
@@ -83,12 +121,48 @@ public class RankChanger implements Listener {
 
 		if (!(timePlayed == null || timePlayed < (Integer) config.get(entry + ".required minutes played"))) {
 
-		    vault.replaceGroup(playerName, group, (String) config.get(entry + ".to"), world);
+		    // remove groups
+		    if (config.get("Remove group command") == null) {
+			vault.playerRemoveGroup(world, playerName, group);
 
+		    } else {
+			Server server = Bukkit.getServer();
+			String cmd = (String) config.get("Remove group command");
+			if (!cmd.equals("none")) {
+			    cmd = cmd.replace("&n", playerName);
+			    cmd = cmd.replace("&g", group);
+			    cmd = cmd.replace("&w", world);
+			    server.dispatchCommand(server.getConsoleSender(), cmd);
+			}
+		    }
+
+		    // add groups
+		    if (config.get("Add group command") == null) {
+			String[] toGroups = ((String) config.get(entry + ".to")).split(";");
+			for (String toGroup : toGroups)
+			    vault.playerAddGroup(world, playerName, toGroup);
+
+		    } else {
+			Server server = Bukkit.getServer();
+
+			String[] toGroups = ((String) config.get(entry + ".to")).split(";");
+			for (String toGroup : toGroups) {
+			    String cmd = (String) config.get("Add group command");
+			    if (!cmd.equals("none")) {
+				cmd = cmd.replace("&n", playerName);
+				cmd = cmd.replace("&g", toGroup);
+				cmd = cmd.replace("&w", world);
+				server.dispatchCommand(server.getConsoleSender(), cmd);
+			    }
+			}
+		    }
+
+		    // Send messages
 		    String message = (String) config.get(entry + ".message");
 		    if (message != null)
 			player.sendMessage(message.replaceAll("(&([a-f0-9]))", "\u00A7$2"));
 
+		    // Execute commands
 		    String commandEntry = (String) config.get(entry + ".commands");
 		    String[] commands = null;
 		    if (commandEntry != null) {
@@ -99,6 +173,9 @@ public class RankChanger implements Listener {
 			for (String cmd : commands) {
 			    Server server = Bukkit.getServer();
 			    if (cmd != null) {
+				cmd = cmd.replace("&n", playerName);
+
+				// legacy (me being inconsistent >.>):
 				cmd = cmd.replace("&p", playerName);
 				server.dispatchCommand(server.getConsoleSender(), cmd);
 			    }

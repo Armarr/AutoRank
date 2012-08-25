@@ -7,6 +7,7 @@ import java.util.ConcurrentModificationException;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -64,6 +65,10 @@ public class Config {
 
 	public Object get(String key) {
 		return this.config.get(key);
+	}
+	
+	public ConfigurationSection getSection(String key){
+	    return config.getConfigurationSection(key);
 	}
 
 	public Set<String> getKeys() {

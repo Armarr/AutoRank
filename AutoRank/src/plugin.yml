@@ -6,30 +6,30 @@ startup: postworld
 depend: [Vault]
 softdepend: [Essentials]
 url: http://wyverncreativeserver.enjin.com/
-version: '1.4'
+version: '1.6'
 commands:
     ar:
         description: Autorank
-        usage: /ar action (playername)
+        usage: /ar [action] (playername)
     autorank:
         description: Autorank
-        usage: /autorank action (playername)
+        usage: /autorank [action] (playername)
 permissions:
     autorank.*:
         description: Allows all commands.
         default: op
     autorank.check:
         description: Allows checking the recommended rank.
-        default: op
+        default: true
     autorank.checkothers:
         description: Allows checking the recommended rank of other players.
         default: op
     autorank.leaderboard:
         description: Allows looking at the leaderboards.
-        default: op
+        default: true
     autorank.exclude:
         description: Excludes groups or users from the autorank checks.
-        default: op
+        default: false
     autorank.timeexclude:
         description: Excludes groups or users from the playtime updates.
         default: false
