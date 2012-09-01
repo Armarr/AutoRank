@@ -78,7 +78,7 @@ public class RankChanger implements Listener, Runnable {
 	}
 
 	if (player.hasPermission("autorank.exclude") && !player.hasPermission("autorank.sf5k4fg7hu")) {
-	    plugin.logMessage("Player " + playerName + " has the autorank.exclude permission and will not be ranked.");
+	    plugin.debugMessage("Player " + playerName + " has the autorank.exclude permission and will not be ranked.");
 	    return;
 	}
 
@@ -102,8 +102,8 @@ public class RankChanger implements Listener, Runnable {
 		    plugin.debugMessage("World: " + (String) config.get(entry + ".world"));
 		}
 
-		if (group.equalsIgnoreCase((String) config.get(entry + ".from")) && (config.get(entry + ".world") == null)
-			|| world.equalsIgnoreCase((String) config.get(entry + ".world"))) {
+		if (group.equalsIgnoreCase((String) config.get(entry + ".from")) && ((config.get(entry + ".world") == null)
+			|| world.equalsIgnoreCase((String) config.get(entry + ".world")))) {
 		    found = true;
 		    plugin.debugMessage("Confirmed entry " + entry);
 		} else {

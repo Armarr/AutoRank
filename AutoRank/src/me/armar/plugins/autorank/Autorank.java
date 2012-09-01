@@ -431,8 +431,8 @@ public class Autorank extends JavaPlugin {
 	    found = false;
 	    while (config.get(entry + ".from") != null && !found) {
 
-		if (Playergroups[i].equals((String) config.get(entry + ".from")) && (config.get(entry + ".world") == null)
-			|| world.equals((String) config.get(entry + ".world"))) {
+		if (Playergroups[i].equals((String) config.get(entry + ".from")) && ((config.get(entry + ".world") == null)
+			|| world.equals((String) config.get(entry + ".world")))) {
 		    found = true;
 		} else {
 		    entry++;
