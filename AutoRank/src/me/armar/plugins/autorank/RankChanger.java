@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 public class RankChanger implements Listener, Runnable {
@@ -58,6 +59,11 @@ public class RankChanger implements Listener, Runnable {
 	if (players.length > 0) {
 	    currentPlayer = new Random().nextInt(players.length) - 1;
 	}
+    }
+    
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void OnPlayerChangedWorld(PlayerChangedWorldEvent e){
+	CheckRank(e.getPlayer());
     }
 
     public void CheckRank(Player player) {
